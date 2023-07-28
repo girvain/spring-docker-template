@@ -1,0 +1,48 @@
+version: "2.2"
+
+services:
+  mysqldb:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.sql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_USER=dev_user
+      - MYSQL_PASSWORD=guru
+      - MYSQL_DATABASE=dev
+    volumes:
+      - "dbdata:/var/lib/mysql"
+#      - "./conf.d:/etc/mysql/conf.d:ro"
+    networks:
+      - spring-cloud-network
+
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_USER=dev_user
+      - MYSQL_PASSWORD=guru
+      - MYSQL_DATABASE=dev
+      - MYSQL_URL=jdbc:mysql://mysqldb:3306/dev
+    ports:
+      - "8080:8080"
+    restart: always
+    links:
+      - mysqldb
+    depends_on:
+      - mysqldb
+    networks:
+      - spring-cloud-network
+
+networks:
+  spring-cloud-network:
+    driver: bridge
+
+volumes:
+  dbdata:
